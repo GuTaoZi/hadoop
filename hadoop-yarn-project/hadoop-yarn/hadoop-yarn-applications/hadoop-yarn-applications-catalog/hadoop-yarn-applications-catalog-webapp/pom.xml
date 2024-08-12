@@ -13,22 +13,23 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://maven.apache.org/POM/4.0.0"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.apache.hadoop</groupId>
-  <artifactId>hadoop-yarn-applications-catalog-webapp</artifactId>
-  <packaging>war</packaging>
-
-  <parent>
-    <artifactId>hadoop-yarn-applications-catalog</artifactId>
+    <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.hadoop</groupId>
-    <version>3.3.6</version>
-  </parent>
+    <artifactId>hadoop-yarn-applications-catalog-webapp</artifactId>
+    <packaging>war</packaging>
 
-  <name>Apache Hadoop YARN Application Catalog Webapp</name>
+    <parent>
+        <artifactId>hadoop-yarn-applications-catalog</artifactId>
+        <groupId>org.apache.hadoop</groupId>
+        <version>3.3.6</version>
+    </parent>
 
-  <url>https://hadoop.apache.org</url>
+    <name>Apache Hadoop YARN Application Catalog Webapp</name>
+
+    <url>https://hadoop.apache.org</url>
 
     <properties>
         <artifact.name>app</artifact.name>
@@ -46,8 +47,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-          <groupId>io.swagger</groupId>
-          <artifactId>swagger-annotations</artifactId>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -289,8 +290,10 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <nodeVersion>${nodejs.version}</nodeVersion>
-                            <yarnVersion>${yarnpkg.version}</yarnVersion>
+                            <nodeVersion>v14.15.0</nodeVersion>
+                            <yarnVersion>v1.22.22</yarnVersion>
+                            <description>Hardcoded node and yarn versions, to address issue:
+                                https://github.com/eirslett/frontend-maven-plugin/issues/757</description>
                         </configuration>
                     </execution>
                     <execution>
@@ -315,7 +318,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <systemPropertyVariables>
-                        <log4j.configuration>file:${project.build.testOutputDirectory}/log4j.properties</log4j.configuration>
+                        <log4j.configuration>
+                            file:${project.build.testOutputDirectory}/log4j.properties</log4j.configuration>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -468,82 +472,84 @@
     </build>
 
     <profiles>
-      <profile>
-        <id>parallel-tests</id>
-        <build>
-          <plugins>
-            <plugin>
-              <groupId>org.apache.hadoop</groupId>
-              <artifactId>hadoop-maven-plugins</artifactId>
-              <executions>
-                <execution>
-                  <id>parallel-tests-createdir</id>
-                  <goals>
-                    <goal>parallel-tests-createdir</goal>
-                  </goals>
-                </execution>
-              </executions>
-            </plugin>
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-surefire-plugin</artifactId>
-              <configuration>
-                <forkCount>${testsThreadCount}</forkCount>
-                <reuseForks>false</reuseForks>
-                <argLine>${maven-surefire-plugin.argLine} -DminiClusterDedicatedDirs=true</argLine>
-                <systemPropertyVariables>
-                  <testsThreadCount>${testsThreadCount}</testsThreadCount>
-                  <test.build.data>${test.build.data}/${surefire.forkNumber}</test.build.data>
-                  <test.build.dir>${test.build.dir}/${surefire.forkNumber}</test.build.dir>
-                  <hadoop.tmp.dir>${hadoop.tmp.dir}/${surefire.forkNumber}</hadoop.tmp.dir>
+        <profile>
+            <id>parallel-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.hadoop</groupId>
+                        <artifactId>hadoop-maven-plugins</artifactId>
+                        <executions>
+                            <execution>
+                                <id>parallel-tests-createdir</id>
+                                <goals>
+                                    <goal>parallel-tests-createdir</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <forkCount>${testsThreadCount}</forkCount>
+                            <reuseForks>false</reuseForks>
+                            <argLine>${maven-surefire-plugin.argLine}
+                                -DminiClusterDedicatedDirs=true</argLine>
+                            <systemPropertyVariables>
+                                <testsThreadCount>${testsThreadCount}</testsThreadCount>
+                                <test.build.data>${test.build.data}/${surefire.forkNumber}</test.build.data>
+                                <test.build.dir>${test.build.dir}/${surefire.forkNumber}</test.build.dir>
+                                <hadoop.tmp.dir>${hadoop.tmp.dir}/${surefire.forkNumber}</hadoop.tmp.dir>
 
-                  <!-- Due to a Maven quirk, setting this to just -->
-                  <!-- surefire.forkNumber won't do the parameter substitution. -->
-                  <!-- Putting a prefix in front of it like "fork-" makes it -->
-                  <!-- work. -->
-                  <test.unique.fork.id>fork-${surefire.forkNumber}</test.unique.fork.id>
-                </systemPropertyVariables>
-              </configuration>
-            </plugin>
-          </plugins>
-        </build>
-      </profile>
-      <profile>
-        <id>test-selector</id>
-        <activation>
-          <property>
-            <name>test</name>
-          </property>
-        </activation>
-        <properties>
-          <javascript.test>${test}</javascript.test>
-        </properties>
-      </profile>
-      <profile>
-        <id>rest-docs</id>
-        <build>
-          <plugins>
-            <plugin>
-              <groupId>org.codehaus.mojo</groupId>
-              <artifactId>exec-maven-plugin</artifactId>
-              <executions>
-                <execution>
-                  <id>apidocs</id>
-                  <phase>package</phase>
-                  <goals>
-                    <goal>exec</goal>
-                  </goals>
-                  <configuration>
-                    <outputFile>${project.build.directory}/apidocs.log</outputFile>
-                    <executable>${basedir}/node/node</executable>
-                    <commandlineArgs>${basedir}/node_modules/.bin/apidoc -i src/main/java -o ${project.build.directory}/site/apidocs</commandlineArgs>
-                    <silent>true</silent>
-                  </configuration>
-                </execution>
-              </executions>
-            </plugin>
-          </plugins>
-        </build>
-      </profile>
+                                <!-- Due to a Maven quirk, setting this to just -->
+                                <!-- surefire.forkNumber won't do the parameter substitution. -->
+                                <!-- Putting a prefix in front of it like "fork-" makes it -->
+                                <!-- work. -->
+                                <test.unique.fork.id>fork-${surefire.forkNumber}</test.unique.fork.id>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>test-selector</id>
+            <activation>
+                <property>
+                    <name>test</name>
+                </property>
+            </activation>
+            <properties>
+                <javascript.test>${test}</javascript.test>
+            </properties>
+        </profile>
+        <profile>
+            <id>rest-docs</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>apidocs</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <outputFile>${project.build.directory}/apidocs.log</outputFile>
+                                    <executable>${basedir}/node/node</executable>
+                                    <commandlineArgs>${basedir}/node_modules/.bin/apidoc -i
+                                        src/main/java -o ${project.build.directory}/site/apidocs</commandlineArgs>
+                                    <silent>true</silent>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>

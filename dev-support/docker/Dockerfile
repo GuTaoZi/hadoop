@@ -90,6 +90,13 @@ ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 ENV PYTHONIOENCODING=utf-8
 
 ######
+# Install npm and nodejs etc.
+######
+
+RUN apt update && apt install -y libssl1.0-dev nodejs-dev node-gyp npm
+RUN npm install --unsafe-perm -g yarn
+
+######
 # Set env vars required to build Hadoop
 ######
 ENV MAVEN_HOME /usr
